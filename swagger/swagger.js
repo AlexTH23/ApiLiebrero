@@ -11,12 +11,16 @@ const options = {
     },
     servers: [
       {
+        url: 'https://liebrero-st86n.ondigitalocean.app',
+        description: 'Servidor de producción',
+      },
+      {
         url: 'http://localhost:3000',
         description: 'Servidor local',
       },
     ],
   },
-  apis: ['./app/routes/*.js', './swagger/*.js'], // Archivos donde están las anotaciones Swagger
+  apis: ['./app/routes/*.js', './swagger/*.js'], // Archivos con anotaciones Swagger
 };
 
 const swaggerSpec = swaggerJSDoc(options);

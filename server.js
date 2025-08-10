@@ -9,8 +9,11 @@ const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 
 // CORS
 const cors = require('cors');
-app.use(cors());
-
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: 'Content-Type, Authorization'
+}));
 // Conexión DB
 const conexion = require('./app/config/conexion');
 conexion.conect();
