@@ -9,11 +9,26 @@ const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 
 // CORS
 const cors = require('cors');
-app.use(cors({
-    origin: '*', // Permite a cualquier origen
-    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-    allowedHeaders: ['Content-Type','Authorization']
-}));
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Permite solicitudes desde file:// (Cordova), null y cualquier otro origen
+    if (!origin || origin === 'null' || origin.startsWith('file://')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // aquí podrías restringir a tu dominio si quisieras
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+// Habilitar preflight para todas las rutas
+app.options('*', cors(corsOptions));
+
 // Conexión DB
 const conexion = require('./app/config/conexion');
 conexion.conect();
