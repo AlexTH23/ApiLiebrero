@@ -1,94 +1,57 @@
-// =========================
-// Configuración
-// =========================
-const CONFIG = require('./app/config/configuracion');
-const app = require('./app/app');
-
-// Swagger
-const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
-
-// =========================
-// CORS compatible con Cordova
-// =========================
-const cors = require('cors');
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Permitir todos los orígenes incluyendo file:// y null (Cordova)
-    if (!origin || origin === 'null' || origin.startsWith('file://')) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Aquí puedes restringir si es producción
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  credentials: false, // Cambia a true si necesitas cookies
-  optionsSuccessStatus: 200,
-  preflightContinue: false,
-  maxAge: 86400
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-
-// =========================
-// Conexión DB
-// =========================
-const conexion = require('./app/config/conexion');
-conexion.conect();
-
-// =========================
-// Swagger middleware
-// =========================
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// =========================
-// Endpoint para recibir Base64 y guardar como imagen
-// =========================
-const fs = require('fs');
+// server.js
+const express = require('express');
 const path = require('path');
-app.use(require('express').json({ limit: '20mb' })); // Permitir JSON grande para base64
+const fs = require('fs');
 
-app.post('/subir-imagen', (req, res) => {
-  try {
-    const { imagenBase64, nombreArchivo } = req.body;
+const app = express();
 
-    if (!imagenBase64) {
-      return res.status(400).json({ error: 'No se envió la imagen en base64' });
-    }
+// Middleware para parsear JSON
+app.use(express.json({ limit: '10mb' }));
 
-    // Detectar tipo de imagen
-    const match = imagenBase64.match(/^data:(image\/\w+);base64,(.+)$/);
-    if (!match) {
-      return res.status(400).json({ error: 'Formato base64 inválido' });
-    }
+// Carpeta pública (si tienes Cordova compilado en /www o /public)
+app.use(express.static(path.join(__dirname, 'public')));
 
-    const extension = match[1].split('/')[1];
-    const data = match[2];
-    const buffer = Buffer.from(data, 'base64');
+// Ruta para convertir una imagen local a Base64
+app.get('/image-to-base64/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const imagePath = path.join(__dirname, 'public', filename);
 
-    // Ruta para guardar
-    const fileName = nombreArchivo || `imagen_${Date.now()}.${extension}`;
-    const savePath = path.join(__dirname, 'uploads', fileName);
-
-    // Crear carpeta si no existe
-    fs.mkdirSync(path.dirname(savePath), { recursive: true });
-
-    fs.writeFileSync(savePath, buffer);
-    console.log(`Imagen guardada en: ${savePath}`);
-
-    res.json({ mensaje: 'Imagen subida correctamente', archivo: fileName });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al guardar la imagen' });
+  if (!fs.existsSync(imagePath)) {
+    return res.status(404).json({ error: 'Imagen no encontrada' });
   }
+
+  const imageBuffer = fs.readFileSync(imagePath);
+  const base64Image = imageBuffer.toString('base64');
+  const mimeType = `image/${path.extname(filename).substring(1)}`;
+
+  res.json({
+    filename,
+    base64: `data:${mimeType};base64,${base64Image}`
+  });
 });
 
-// =========================
-// Puerto
-// =========================
-const PORT = process.env.PORT || CONFIG.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Aplicación corriendo en puerto ${PORT}`);
+// Ruta para recibir Base64 y guardarlo como imagen
+app.post('/base64-to-image', (req, res) => {
+  const { base64, filename } = req.body;
+
+  if (!base64 || !filename) {
+    return res.status(400).json({ error: 'Base64 y filename requeridos' });
+  }
+
+  const matches = base64.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+  if (!matches || matches.length !== 3) {
+    return res.status(400).json({ error: 'Formato Base64 inválido' });
+  }
+
+  const imageBuffer = Buffer.from(matches[2], 'base64');
+  const savePath = path.join(__dirname, 'public', filename);
+
+  fs.writeFileSync(savePath, imageBuffer);
+  res.json({ success: true, message: 'Imagen guardada correctamente' });
+});
+
+// Puerto dinámico para DigitalOcean
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
