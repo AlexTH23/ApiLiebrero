@@ -1,57 +1,66 @@
-// server.js
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
+// Configuración
+const CONFIG = require('./app/config/configuracion');
 
-const app = express();
+// App principal
+const app = require('./app/app');
 
-// Middleware para parsear JSON
-app.use(express.json({ limit: '10mb' }));
+// Swagger
+const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 
-// Carpeta pública (si tienes Cordova compilado en /www o /public)
-app.use(express.static(path.join(__dirname, 'public')));
+// CORS
+const cors = require('cors');
+// Configuración CORS mejorada
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permite todas las origenes (en producción deberías restringirlo)
+    callback(null, true);
 
-// Ruta para convertir una imagen local a Base64
-app.get('/image-to-base64/:filename', (req, res) => {
-  const filename = req.params.filename;
-  const imagePath = path.join(__dirname, 'public', filename);
+    // Para producción, usa algo como:
+    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
+    // if (!origin || allowedOrigins.includes(origin)) {
+    //   callback(null, true);
+    // } else {
+    //   callback(new Error('Not allowed by CORS'));
+    // }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  credentials: true,  // Importante si usas cookies/tokens
+  optionsSuccessStatus: 200,
+  preflightContinue: false,
+  maxAge: 86400 // Cachear opciones CORS por 24 horas
+};
 
-  if (!fs.existsSync(imagePath)) {
-    return res.status(404).json({ error: 'Imagen no encontrada' });
-  }
+// Aplica CORS globalmente
+app.use(cors(corsOptions));
 
-  const imageBuffer = fs.readFileSync(imagePath);
-  const base64Image = imageBuffer.toString('base64');
-  const mimeType = `image/${path.extname(filename).substring(1)}`;
+// Manejo seguro de preflight OPTIONS (sin romper path-to-regexp en Express 5)
+app.options(/.*/, cors(corsOptions)); // Expresión regular en vez de '*'
 
-  res.json({
-    filename,
-    base64: `data:${mimeType};base64,${base64Image}`
-  });
+// Middleware para asegurar cabeceras en todas las respuestas
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
 });
 
-// Ruta para recibir Base64 y guardarlo como imagen
-app.post('/base64-to-image', (req, res) => {
-  const { base64, filename } = req.body;
 
-  if (!base64 || !filename) {
-    return res.status(400).json({ error: 'Base64 y filename requeridos' });
-  }
+app.use(cors(corsOptions));
 
-  const matches = base64.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
-  if (!matches || matches.length !== 3) {
-    return res.status(400).json({ error: 'Formato Base64 inválido' });
-  }
+// Preflight para todas las rutas (Express 5 usa RegExp en vez de '*')
+app.options(/.*/, cors(corsOptions));
 
-  const imageBuffer = Buffer.from(matches[2], 'base64');
-  const savePath = path.join(__dirname, 'public', filename);
+// Conexión DB
+const conexion = require('./app/config/conexion');
+conexion.conect();
 
-  fs.writeFileSync(savePath, imageBuffer);
-  res.json({ success: true, message: 'Imagen guardada correctamente' });
-});
+// Swagger middleware
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Puerto dinámico para DigitalOcean
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+// Puerto — primero intenta process.env.PORT (DigitalOcean/App Platform)
+const PORT = process.env.PORT || CONFIG.PORT || 3000;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Aplicación corriendo en puerto ${PORT}`);
 });
