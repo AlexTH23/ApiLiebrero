@@ -10,46 +10,27 @@ const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 // CORS
 const cors = require('cors');
 // Configuración CORS mejorada
+const cors = require('cors');
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permite todas las origenes (en producción deberías restringirlo)
-    callback(null, true);
-
-    // Para producción, usa algo como:
-    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
-    // if (!origin || allowedOrigins.includes(origin)) {
-    //   callback(null, true);
-    // } else {
-    //   callback(new Error('Not allowed by CORS'));
-    // }
+    // Permitir todos los orígenes, incluyendo null y file://
+    if (!origin || origin === 'null' || origin.startsWith('file://')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // O restringe aquí si quieres
+    }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  credentials: true,  // Importante si usas cookies/tokens
+  credentials: false, // Cambia a false si usas '*'
   optionsSuccessStatus: 200,
   preflightContinue: false,
-  maxAge: 86400 // Cachear opciones CORS por 24 horas
+  maxAge: 86400
 };
 
-// Aplica CORS globalmente
 app.use(cors(corsOptions));
-
-// Manejo seguro de preflight OPTIONS (sin romper path-to-regexp en Express 5)
-app.options(/.*/, cors(corsOptions)); // Expresión regular en vez de '*'
-
-// Middleware para asegurar cabeceras en todas las respuestas
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
-});
-
-
-app.use(cors(corsOptions));
-
-// Preflight para todas las rutas (Express 5 usa RegExp en vez de '*')
-app.options(/.*/, cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Conexión DB
 const conexion = require('./app/config/conexion');
