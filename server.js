@@ -9,13 +9,12 @@ const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 
 // CORS
 const cors = require('cors');
-
 // Configuración CORS mejorada
 const corsOptions = {
   origin: function (origin, callback) {
     // Permite todas las origenes (en producción deberías restringirlo)
     callback(null, true);
-    
+
     // Para producción, usa algo como:
     // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
     // if (!origin || allowedOrigins.includes(origin)) {
@@ -29,21 +28,23 @@ const corsOptions = {
   credentials: true,  // Importante si usas cookies/tokens
   optionsSuccessStatus: 200,
   preflightContinue: false,
-  maxAge: 86400  // Cachear opciones CORS por 24 horas
+  maxAge: 86400 // Cachear opciones CORS por 24 horas
 };
 
+// Aplica CORS globalmente
 app.use(cors(corsOptions));
 
-// Middleware para manejar OPTIONS (preflight)
-app.options('*', cors(corsOptions));
+// Manejo seguro de preflight OPTIONS (sin romper path-to-regexp en Express 5)
+app.options(/.*/, cors(corsOptions)); // Expresión regular en vez de '*'
 
-// Asegúrate de que todas las rutas acepten OPTIONS
+// Middleware para asegurar cabeceras en todas las respuestas
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
 });
+
 
 app.use(cors(corsOptions));
 
