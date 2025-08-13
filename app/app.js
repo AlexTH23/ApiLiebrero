@@ -1,30 +1,19 @@
 const express = require('express');
 const app = express();
 require('dotenv').config();
-//viene de router
-const router = require('./routes/librosRoute')
-const authRoutes = require('./routes/authRoutes');
 
-
-//PARTE DE JOVANA
+// Importar rutas
+const router = require('./routes/librosRoute');
 const usuarioRoutes = require('./routes/usuarioRoute');
+const authRoutes = require('./routes/authRoutes'); // Ahora sí existe este archivo
 
-/*Aqui vamos a decirle que apartir de app vamos a "usar" a un express.url en code y entre parentesis y llaves vamos a
-darle un formato extendido que sea falso (Cuando esta en falso no muestra los datos) */
-app.use(express.urlencoded({extended:false}))
+// Middlewares para parsear datos
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
-//Nos muestra la informacion en formato JSON
-app.use(express.json())
+// Rutas
+app.use('/libros', router);
+app.use('/auth', authRoutes);      // Ruta /auth funcionando
+app.use('/usuarios', usuarioRoutes);
 
-//Cuando nosotros solicitemos "raiz" ahora si va a llamar a router
-//ACTUALIZACION SE LE IMPLEMENTA "libros"
-app.use('/libros',router)
-
-//auth
-app.use('/auth', authRoutes);
-
-//PARTE DE JOVANA
-
-app.use('/usuarios', usuarioRoutes); 
-
-module.exports = app
+module.exports = app;
