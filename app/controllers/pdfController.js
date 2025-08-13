@@ -22,7 +22,7 @@ async function subirPDF(req, res) {
       })
     );
 
-    const url = `https://${process.env.SPACES_BUCKET}.${process.env.SPACES_REGION}.cdn.digitaloceanspaces.com/${fileName}`;
+const url = `https://${process.env.SPACES_BUCKET}.${process.env.SPACES_REGION}.cdn.digitaloceanspaces.com/${fileName}`;
     res.json({ url, key: fileName });
   } catch (err) {
     console.error(err);
