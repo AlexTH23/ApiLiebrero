@@ -7,17 +7,6 @@ const librosModel = require('../models/librosModel')
 /**
  * @swagger
  * components:
- *   schemas:
- *     Capitulo:
- *       type: object
- *       properties:
- *         numero:
- *           type: integer
- *         titulo:
- *           type: string
- *         contenido:
- *           type: string
- *
  *     Libro:
  *       type: object
  *       required:
