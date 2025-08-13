@@ -17,7 +17,7 @@ const cors = require('cors');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// ✅ CORS abierto para permitir peticiones desde cualquier origen (útil para pruebas locales)
+// ✅ CORS abierto para permitir peticiones desde cualquier origen
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -26,12 +26,22 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// ✅ Headers adicionales para evitar bloqueos adicionales
+// ✅ Headers adicionales para evitar bloqueos
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   next();
+});
+
+// 🧪 Endpoint para verificar variables de entorno
+app.get('/env-check', (req, res) => {
+  res.json({
+    SPACES_REGION: process.env.SPACES_REGION,
+    SPACES_BUCKET: process.env.SPACES_BUCKET,
+    SPACES_KEY: process.env.SPACES_KEY ? '✅' : '❌',
+    SPACES_SECRET: process.env.SPACES_SECRET ? '✅' : '❌',
+  });
 });
 
 // Conexión DB
