@@ -1,30 +1,36 @@
 const s3 = require('../config/spaces');
-const { PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
-// Configuración de multer con límites y filtros
+// Configuración de multer con límites más generosos para Cordova
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB máximo
-    files: 1 // Solo un archivo a la vez
+    fileSize: 50 * 1024 * 1024, // 50MB máximo para archivos grandes
+    files: 5 // Permitir hasta 5 archivos simultáneos
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype !== 'application/pdf') {
-      return cb(new Error('Solo se permiten archivos PDF'), false);
+    // Permitir PDFs y otros tipos de archivos que puedan necesitar
+    const allowedTypes = ['application/pdf', 'application/octet-stream'];
+    if (allowedTypes.includes(file.mimetype) || file.originalname.toLowerCase().endsWith('.pdf')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos PDF'), false);
     }
-    cb(null, true);
   }
 }).single('pdf');
 
 /**
- * Sube un PDF al bucket con manejo mejorado de errores
+ * Sube un PDF al bucket con manejo mejorado de errores para Cordova
  */
 async function subirPDF(req, res) {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No se envió archivo PDF válido' });
+      return res.status(400).json({ 
+        error: 'No se envió archivo PDF válido',
+        detalles: 'Asegúrate de enviar un archivo con el nombre "pdf" en el formulario'
+      });
     }
 
     // Generar nombre de archivo seguro
@@ -45,11 +51,13 @@ async function subirPDF(req, res) {
     const url = `https://${process.env.SPACES_BUCKET}.${process.env.SPACES_REGION}.cdn.digitaloceanspaces.com/${fileName}`;
     
     res.json({ 
+      success: true,
       url, 
       key: fileName,
       nombre: safeFilename,
       size: req.file.size,
-      mensaje: 'PDF subido correctamente'
+      mensaje: 'PDF subido correctamente',
+      timestamp: new Date().toISOString()
     });
     
   } catch (err) {
@@ -57,13 +65,16 @@ async function subirPDF(req, res) {
     
     // Manejar errores específicos de AWS
     let errorMessage = 'Error al subir PDF';
-    if (err.name === 'InvalidObjectState') {
-      errorMessage = 'El archivo ya existe o está en proceso de carga';
+    if (err.name === 'NotFound') {
+      errorMessage = 'El archivo PDF no fue encontrado';
     } else if (err.name === 'RequestTimeout') {
       errorMessage = 'Tiempo de espera agotado. Intente nuevamente';
+    } else if (err.code === 'EntityTooLarge') {
+      errorMessage = 'El archivo es demasiado grande. Máximo 50MB';
     }
     
     res.status(500).json({ 
+      success: false,
       error: errorMessage,
       detalles: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
