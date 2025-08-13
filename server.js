@@ -13,88 +13,43 @@ const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 // CORS
 const cors = require('cors');
 
-// Middlewares nativos de Express para parsear JSON y urlencoded con límite de 50 MB para archivos grandes
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Middlewares nativos de Express para parsear JSON y urlencoded con límite de 10 MB
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Configuración CORS específica para tu aplicación Cordova
+// Configuración CORS mejorada
 const corsOptions = {
   origin: function (origin, callback) {
-    // Lista de orígenes permitidos para Cordova y desarrollo
-    const allowedOrigins = [
-      'https://mis-pdfs.sfo3.digitaloceanspaces.com',
-      'https://liebrero-st86n.ondigitalocean.app',
-      'http://localhost',
-      'http://localhost:3000',
-      'http://localhost:8080',
-      'file://'
-    ];
-    
-    // Si no hay origin (como en Cordova) o está en la lista permitida
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
-    
-    const isAllowed = allowedOrigins.some(allowed => origin === allowed || origin.includes(allowed));
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.log('CORS bloqueado para origen:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Permite todas las orígenes (en producción deberías restringirlo)
+    callback(null, true);
+    // Para producción, usar algo como:
+    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
+    // if (!origin || allowedOrigins.includes(origin)) {
+    //   callback(null, true);
+    // } else {
+    //   callback(new Error('Not allowed by CORS'));
+    // }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'Accept', 
-    'X-Requested-With',
-    'Access-Control-Allow-Origin',
-    'Origin',
-    'X-Custom-Header'
-  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   credentials: true,
   optionsSuccessStatus: 200,
   preflightContinue: false,
-  maxAge: 86400
+  maxAge: 86400 // Cachear opciones CORS por 24 horas
 };
 
 // Aplica CORS globalmente
 app.use(cors(corsOptions));
 
-// Manejo específico de preflight OPTIONS para todas las rutas
-app.options('*', cors(corsOptions));
+// Manejo seguro de preflight OPTIONS (sin romper path-to-regexp en Express 5)
+app.options(/.*/, cors(corsOptions)); // Expresión regular en vez de '*'
 
 // Middleware para asegurar cabeceras en todas las respuestas
 app.use((req, res, next) => {
-  // Permitir múltiples orígenes
-  const allowedOrigins = [
-    'https://mis-pdfs.sfo3.digitaloceanspaces.com',
-    'https://liebrero-st86n.ondigitalocean.app',
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'file://'
-  ];
-  
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.some(allowed => origin.includes(allowed))) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-  
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Manejar preflight requests
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
 });
 
 // Conexión DB
@@ -109,6 +64,4 @@ const PORT = process.env.PORT || CONFIG.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Aplicación corriendo en puerto ${PORT}`);
-  console.log(`CORS configurado para permitir: https://mis-pdfs.sfo3.digitaloceanspaces.com`);
-  console.log(`API disponible en: https://liebrero-st86n.ondigitalocean.app`);
 });
