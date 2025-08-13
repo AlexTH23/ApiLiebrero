@@ -3,7 +3,7 @@ const app = express();
 require('dotenv').config();
 //viene de router
 const router = require('./routes/librosRoute')
-
+const authRoutes = require('./routes/authRoutes');
 
 
 //PARTE DE JOVANA
