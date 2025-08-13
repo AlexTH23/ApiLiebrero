@@ -1,14 +1,24 @@
+// routes/pdfRoutes.js
 const express = require('express');
 const router = express.Router();
-const { upload, subirPDF, obtenerPDF, eliminarPDF } = require('../controllers/pdfController');
+const { 
+  upload, 
+  subirPDF, 
+  obtenerPDF, 
+  eliminarPDF,
+  listarPDFs
+} = require('../controllers/pdfController');
 
-// 📤 POST /pdfs/subir
-router.post('/subir', upload.single('pdf'), subirPDF);
+// Subir PDF (POST)
+router.post('/upload', upload, subirPDF);
 
-// 👁️ GET /pdfs/:key
+// Obtener URL de PDF (GET)
 router.get('/:key', obtenerPDF);
 
-// ❌ DELETE /pdfs/:key
+// Eliminar PDF (DELETE)
 router.delete('/:key', eliminarPDF);
+
+// Listar todos los PDFs (GET)
+router.get('/', listarPDFs);
 
 module.exports = router;
