@@ -89,26 +89,6 @@ router.get('/', usuariosController.buscarTodo)
 
 /**
  * @swagger
- * /usuarios:
- *   post:
- *     summary: Agregar un nuevo usuario (liebrero)
- *     tags: [Usuarios]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Usuario'
- *     responses:
- *       200:
- *         description: Usuario creado correctamente
- *       404:
- *         description: Error al guardar el usuario
- */
-router.post('/', usuariosController.agregarUsuario)
-
-/**
- * @swagger
  * /usuarios/{key}/{value}:
  *   get:
  *     summary: Buscar un usuario por cualquier campo
