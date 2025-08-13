@@ -1,3 +1,5 @@
+// server.js
+
 // Importa express para usar sus middlewares
 const express = require('express');
 
@@ -51,5 +53,5 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const PORT = process.env.PORT || CONFIG.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Aplicación corriendo en puerto ${PORT}`);
+  console.log(`🚀 Aplicación corriendo en puerto ${PORT}`);
 });
