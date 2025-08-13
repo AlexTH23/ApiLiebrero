@@ -1,7 +1,9 @@
 const express = require('express');
 const app = express();
+require('dotenv').config();
 //viene de router
 const router = require('./routes/librosRoute')
+
 
 
 //PARTE DE JOVANA
@@ -18,7 +20,8 @@ app.use(express.json())
 //ACTUALIZACION SE LE IMPLEMENTA "libros"
 app.use('/libros',router)
 
-
+//auth
+app.use('/auth', authRoutes);
 
 //PARTE DE JOVANA
 
