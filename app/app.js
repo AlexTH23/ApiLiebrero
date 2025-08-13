@@ -13,7 +13,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/libros', router);
-app.use('/auth', authRoutes);      // Ruta /auth funcionando
+app.use('/auth', authRoute);      // Ruta /auth funcionando
 app.use('/usuarios', usuarioRoutes);
 
 module.exports = app;
