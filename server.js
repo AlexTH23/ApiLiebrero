@@ -1,43 +1,67 @@
+// Importa express para usar sus middlewares
 const express = require('express');
-const cors = require('cors');
+
+// Configuración
 const CONFIG = require('./app/config/configuracion');
+
+// App principal (instancia express ya creada dentro de ./app/app)
+const app = require('./app/app');
+
+// Swagger
 const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
-const conexion = require('./app/config/conexion');
 
-// App principal
-const app = require('./app/app'); // tus rutas y middlewares
+// CORS
+const cors = require('cors');
 
-// ===== CORS =====
-const corsOptions = {
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  credentials: true,
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-
-// ===== Middlewares =====
+// Middlewares nativos de Express para parsear JSON y urlencoded con límite de 10 MB
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Headers CORS adicionales
+// Configuración CORS mejorada
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permite todas las orígenes (en producción deberías restringirlo)
+    callback(null, true);
+    // Para producción, usar algo como:
+    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
+    // if (!origin || allowedOrigins.includes(origin)) {
+    //   callback(null, true);
+    // } else {
+    //   callback(new Error('Not allowed by CORS'));
+    // }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  preflightContinue: false,
+  maxAge: 86400 // Cachear opciones CORS por 24 horas
+};
+
+// Aplica CORS globalmente
+app.use(cors(corsOptions));
+
+// Manejo seguro de preflight OPTIONS (sin romper path-to-regexp en Express 5)
+app.options(/.*/, cors(corsOptions)); // Expresión regular en vez de '*'
+
+// Middleware para asegurar cabeceras en todas las respuestas
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
 });
 
-// Conexión a DB
+// Conexión DB
+const conexion = require('./app/config/conexion');
 conexion.conect();
 
-// Swagger
+// Swagger middleware
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Puerto
+// Puerto — primero intenta process.env.PORT (DigitalOcean/App Platform)
 const PORT = process.env.PORT || CONFIG.PORT || 3000;
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Aplicación corriendo en puerto ${PORT}`);
+  console.log(`Aplicación corriendo en puerto ${PORT}`);
 });
