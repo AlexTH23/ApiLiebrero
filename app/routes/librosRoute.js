@@ -201,6 +201,43 @@ router.post('/', librosController.crearLibro)
    *         description: Error al eliminar o libro no encontrado
    */
   
-  .delete('/:key/:value', librosController.buscarLibro, librosController.eliminarLibro);
+  .delete('/:key/:value', librosController.buscarLibro, librosController.eliminarLibro)
+
+  // Rutas relativas: nunca usar URLs completas
+.get('/libros', async (req, res) => {
+    try {
+        const libros = await librosModel.find();
+        res.json(libros);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+})
+
+.post('/libros', async (req, res) => {
+    try {
+        const nuevoLibro = new librosModel(req.body);
+        const guardado = await nuevoLibro.save();
+        res.json(guardado);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+})
+
+// PDF por título
+.get('/libros/:titulo/pdf', async (req, res) => {
+    try {
+        const libro = await librosModel.findOne({ titulo: req.params.titulo });
+        if (!libro || !libro.archivoJSON) return res.status(404).send('PDF no encontrado');
+
+        // archivoJSON es base64 con data:application/pdf;base64,...
+        const base64Data = libro.archivoJSON.split(';base64,').pop();
+        const pdfBuffer = Buffer.from(base64Data, 'base64');
+
+        res.contentType("application/pdf");
+        res.send(pdfBuffer);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+})
 
 module.exports=router
