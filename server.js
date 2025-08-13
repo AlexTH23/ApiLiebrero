@@ -13,42 +13,30 @@ const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 // CORS
 const cors = require('cors');
 
-// Middlewares nativos de Express para parsear JSON y urlencoded con límite de 10 MB
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
-
-// Configuración CORS mejorada
+// ===== Configuración CORS =====
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Permite todas las orígenes (en producción deberías restringirlo)
-    callback(null, true);
-    // Para producción, usar algo como:
-    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
-    // if (!origin || allowedOrigins.includes(origin)) {
-    //   callback(null, true);
-    // } else {
-    //   callback(new Error('Not allowed by CORS'));
-    // }
-  },
+  origin: '*', // Permitir todos los orígenes
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   credentials: true,
-  optionsSuccessStatus: 200,
-  preflightContinue: false,
-  maxAge: 86400 // Cachear opciones CORS por 24 horas
+  optionsSuccessStatus: 200
 };
 
-// Aplica CORS globalmente
+// Aplica CORS globalmente (antes de cualquier otra cosa)
 app.use(cors(corsOptions));
 
-// Manejo seguro de preflight OPTIONS (sin romper path-to-regexp en Express 5)
-app.options(/.*/, cors(corsOptions)); // Expresión regular en vez de '*'
+// Manejo seguro de preflight OPTIONS
+app.options('*', cors(corsOptions));
 
-// Middleware para asegurar cabeceras en todas las respuestas
+// ===== Middlewares de Express =====
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Middleware para asegurar que siempre se envíen headers CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
   next();
 });
 
