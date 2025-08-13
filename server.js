@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const cors = require('cors');
 const CONFIG = require('./app/config/configuracion');
@@ -7,19 +5,18 @@ const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 const conexion = require('./app/config/conexion');
 
 // App principal
-const app = require('./app/app'); // Aquí cargamos las rutas desde app.js
+const app = require('./app/app'); // tus rutas y middlewares
 
 // ===== CORS =====
 const corsOptions = {
-  origin: '*', // permitir todos los orígenes
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   credentials: true,
   optionsSuccessStatus: 200
 };
-
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Preflight OPTIONS
+app.options('*', cors(corsOptions));
 
 // ===== Middlewares =====
 app.use(express.json({ limit: '10mb' }));
