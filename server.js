@@ -27,12 +27,18 @@ const corsOptions = {
       'http://localhost',
       'http://localhost:3000',
       'http://localhost:8080',
-      'file://',
-      null // Para permitir requests desde file:// (Cordova)
+      'file://'
     ];
     
     // Si no hay origin (como en Cordova) o está en la lista permitida
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some(allowed => origin && origin.includes(allowed))) {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    
+    const isAllowed = allowedOrigins.some(allowed => origin === allowed || origin.includes(allowed));
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.log('CORS bloqueado para origen:', origin);
@@ -79,7 +85,7 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
   }
   
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Methods', 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
   
