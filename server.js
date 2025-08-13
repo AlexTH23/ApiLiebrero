@@ -17,38 +17,54 @@ const cors = require('cors');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Configuración CORS mejorada
+// Configuración CORS ultra-permisiva para Cordova y Live Server
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permite todas las orígenes (en producción deberías restringirlo)
+    // Permitir todos los orígenes en desarrollo
+    // Esto incluye file:// para Cordova y localhost para Live Server
     callback(null, true);
-    // Para producción, usar algo como:
-    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
-    // if (!origin || allowedOrigins.includes(origin)) {
-    //   callback(null, true);
-    // } else {
-    //   callback(new Error('Not allowed by CORS'));
-    // }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'Accept', 
+    'X-Requested-With',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Methods',
+    'X-Requested-With'
+  ],
+  exposedHeaders: ['Content-Length', 'X-Filename'],
   credentials: true,
   optionsSuccessStatus: 200,
   preflightContinue: false,
-  maxAge: 86400 // Cachear opciones CORS por 24 horas
+  maxAge: 86400
 };
 
-// Aplica CORS globalmente
+// Aplica CORS globalmente ANTES de cualquier otra ruta
 app.use(cors(corsOptions));
 
-// Manejo seguro de preflight OPTIONS (sin romper path-to-regexp en Express 5)
-app.options(/.*/, cors(corsOptions)); // Expresión regular en vez de '*'
-
-// Middleware para asegurar cabeceras en todas las respuestas
+// Manejo específico de preflight OPTIONS
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    return res.status(200).end();
+  }
+  next();
+});
+
+// Middleware para asegurar cabeceras CORS en todas las respuestas
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Access-Control-Request-Method, Access-Control-Request-Headers');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Expose-Headers', 'Content-Length, X-Filename');
   next();
 });
 

@@ -26,6 +26,11 @@ const upload = multer({
  */
 async function subirPDF(req, res) {
   try {
+    // Añadir cabeceras CORS
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+    
     if (!req.file) {
       return res.status(400).json({ 
         error: 'No se envió archivo PDF válido',
@@ -86,6 +91,11 @@ async function subirPDF(req, res) {
  */
 async function obtenerPDF(req, res) {
   try {
+    // Añadir cabeceras CORS
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+    
     const { key } = req.params;
     if (!key) return res.status(400).json({ error: 'Falta el identificador del archivo' });
 
@@ -118,6 +128,11 @@ async function obtenerPDF(req, res) {
  */
 async function eliminarPDF(req, res) {
   try {
+    // Añadir cabeceras CORS
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+    
     const { key } = req.params;
     if (!key) return res.status(400).json({ error: 'Falta el identificador del archivo' });
 
@@ -160,6 +175,11 @@ async function eliminarPDF(req, res) {
  */
 async function listarPDFs(req, res) {
   try {
+    // Añadir cabeceras CORS
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+    
     const { Contents } = await s3.send(new ListObjectsV2Command({
       Bucket: process.env.SPACES_BUCKET,
       Prefix: 'pdfs/' // Solo archivos en la carpeta pdfs
