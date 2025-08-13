@@ -4,7 +4,7 @@ const express = require('express');
 // Configuración
 const CONFIG = require('./app/config/configuracion');
 
-// App principal
+// App principal (instancia express ya creada dentro de ./app/app)
 const app = require('./app/app');
 
 // Swagger
@@ -13,47 +13,55 @@ const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 // CORS
 const cors = require('cors');
 
-// Middlewares nativos de Express para parsear JSON y form-data
+// Middlewares nativos de Express para parsear JSON y urlencoded con límite de 10 MB
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// ✅ CORS abierto para permitir peticiones desde cualquier origen
-app.use(cors({
-  origin: '*',
+// Configuración CORS mejorada
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permite todas las orígenes (en producción deberías restringirlo)
+    callback(null, true);
+    // Para producción, usar algo como:
+    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
+    // if (!origin || allowedOrigins.includes(origin)) {
+    //   callback(null, true);
+    // } else {
+    //   callback(new Error('Not allowed by CORS'));
+    // }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['*'],
-  credentials: false,
-  optionsSuccessStatus: 200
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  preflightContinue: false,
+  maxAge: 86400 // Cachear opciones CORS por 24 horas
+};
 
-// ✅ Headers adicionales para evitar bloqueos
+// Aplica CORS globalmente
+app.use(cors(corsOptions));
+
+// Manejo seguro de preflight OPTIONS (sin romper path-to-regexp en Express 5)
+app.options(/.*/, cors(corsOptions)); // Expresión regular en vez de '*'
+
+// Middleware para asegurar cabeceras en todas las respuestas
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
-});
-
-// 🧪 Endpoint para verificar variables de entorno
-app.get('/env-check', (req, res) => {
-  res.json({
-    SPACES_REGION: process.env.SPACES_REGION,
-    SPACES_BUCKET: process.env.SPACES_BUCKET,
-    SPACES_KEY: process.env.SPACES_KEY ? '✅' : '❌',
-    SPACES_SECRET: process.env.SPACES_SECRET ? '✅' : '❌',
-  });
 });
 
 // Conexión DB
 const conexion = require('./app/config/conexion');
 conexion.conect();
 
-// Swagger
+// Swagger middleware
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Puerto
+// Puerto — primero intenta process.env.PORT (DigitalOcean/App Platform)
 const PORT = process.env.PORT || CONFIG.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Aplicación corriendo en puerto ${PORT}`);
+  console.log(`Aplicación corriendo en puerto ${PORT}`);
 });
