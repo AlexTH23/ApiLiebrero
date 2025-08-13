@@ -32,7 +32,14 @@ exports.login = async (req, res) => {
             return res.status(401).json({ mensaje: "Contraseña incorrecta" });
         }
 
-        const token = jwt.sign({ id: usuario._id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign(
+  { 
+    userId: usuario._id,  // ¡Usa el _id de MongoDB!
+    email: usuario.email  // Opcional: añade más datos si los necesitas
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: '24h' }  // Ajusta el tiempo de expiración
+);
 
         res.json({ mensaje: "Login exitoso", token });
     } catch (error) {

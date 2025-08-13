@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-require('dotenv').config();
+const cors = require('cors');
 
 // Middlewares
 app.use(express.urlencoded({ extended: false }));
@@ -11,7 +11,9 @@ const librosRoute = require('./routes/librosRoute');
 const usuarioRoute = require('./routes/usuarioRoute');
 const authRoute = require('./routes/authRoute');
 const pdfRoute = require('./routes/pdfRoute');
+require('dotenv').config();
 
+app.use(cors());
 // Rutas
 app.use('/libros', librosRoute);
 app.use('/auth', authRoute);

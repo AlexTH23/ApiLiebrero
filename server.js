@@ -22,13 +22,6 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Permite todas las orígenes (en producción deberías restringirlo)
     callback(null, true);
-    // Para producción, usar algo como:
-    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
-    // if (!origin || allowedOrigins.includes(origin)) {
-    //   callback(null, true);
-    // } else {
-    //   callback(new Error('Not allowed by CORS'));
-    // }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],

@@ -5,11 +5,11 @@ const jwt = require('jsonwebtoken');
 
 const UsuarioModel = require('../models/usuarioModel'); // tu modelo real
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mi_clave_secreta_super_segura';
-const JWT_EXPIRES = process.env.JWT_EXPIRES || '2h';
-const JWT_ISSUER = process.env.JWT_ISSUER || 'mi-app-libreria';
+const JWT_SECRET = process.env.JWT_SECRET || 'tu_clave_secreta_123';
+const JWT_EXPIRES = process.env.JWT_EXPIRES || '24H';
+const JWT_ISSUER = process.env.JWT_ISSUER || 'LIEBRERA';
 
-// ✅ Registro
+//Registro
 router.post('/registro', async (req, res) => {
   try {
     const { nombre, apellido, email, telefono, password } = req.body;
@@ -41,7 +41,7 @@ router.post('/registro', async (req, res) => {
   }
 });
 
-// ✅ Login
+//Login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;

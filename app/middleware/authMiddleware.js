@@ -1,24 +1,20 @@
-const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'mi_clave_secreta_super_segura';
+// middlewares/authMiddleware.js
+const jwt = require("jsonwebtoken");
 
-module.exports = function verificarToken(req, res, next) {
-  let token = req.headers['authorization'] || req.headers['x-access-token'];
+const authMiddleware = (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
-    return res.status(401).json({ message: 'Token no proporcionado' });
+    return res.status(401).json({ error: 'Token no proporcionado' });
   }
 
-  if (typeof token === 'string' && token.toLowerCase().startsWith('bearer ')) {
-    token = token.slice(7).trim();
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ message: 'Token inválido o expirado' });
-    }
-
-    req.userId = decoded.sub;
-    req.user = decoded;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;  // Aquí debería estar el _id del usuario
     next();
-  });
+  } catch (error) {
+    res.status(401).json({ error: 'Token inválido o expirado' });
+  }
 };
+
+module.exports = authMiddleware;
