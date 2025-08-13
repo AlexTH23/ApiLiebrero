@@ -1,27 +1,24 @@
-// Configuración
+// Importaciones principales
+const express = require('express');
 const CONFIG = require('./app/config/configuracion');
-
-// App principal
 const app = require('./app/app');
-
-// Swagger
 const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
-
-// CORS
 const cors = require('cors');
+
+// SOLUCIÓN AL ERROR 413: Aumentar límite de carga (50MB)
+app.use(express.json({ 
+  limit: '50mb'    // Aumenta límite para JSON
+}));
+app.use(express.urlencoded({ 
+  limit: '50mb',   // Aumenta límite para datos de formularios
+  extended: true 
+}));
+
 // Configuración CORS mejorada
 const corsOptions = {
   origin: function (origin, callback) {
     // Permite todas las origenes (en producción deberías restringirlo)
     callback(null, true);
-
-    // Para producción, usa algo como:
-    // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
-    // if (!origin || allowedOrigins.includes(origin)) {
-    //   callback(null, true);
-    // } else {
-    //   callback(new Error('Not allowed by CORS'));
-    // }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
@@ -45,22 +42,21 @@ app.use((req, res, next) => {
   next();
 });
 
-
-app.use(cors(corsOptions));
-
-// Preflight para todas las rutas (Express 5 usa RegExp en vez de '*')
-app.options(/.*/, cors(corsOptions));
-
-// Conexión DB
+// Conexión a MongoDB Atlas
 const conexion = require('./app/config/conexion');
-conexion.conect();
+conexion.conect(); // Esta función debe manejar la conexión a Atlas
 
 // Swagger middleware
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Puerto — primero intenta process.env.PORT (DigitalOcean/App Platform)
+// Puerto — primero intenta process.env.PORT (para entornos cloud)
 const PORT = process.env.PORT || CONFIG.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Aplicación corriendo en puerto ${PORT}`);
+  console.log(`\n=========================================`);
+  console.log(`🚀 Servidor iniciado en puerto ${PORT}`);
+  console.log(`🌐 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📚 Documentación API: http://localhost:${PORT}/api-docs`);
+  console.log(`🗄️  Base de datos: MongoDB Atlas`);
+  console.log(`=========================================\n`);
 });
