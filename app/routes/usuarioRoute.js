@@ -42,44 +42,35 @@ const usuariosController = require('../controllers/usuariosController');
  *         email: juan.perez@gmail.com
  *         telefono: "5551234567"
  *         password: 12345678
-
- *     LoginResponse:
- *       type: object
- *       properties:
- *         mensaje:
- *           type: string
- *           example: Sesión iniciada
- *         token:
- *           type: string
- *           description: JWT para autenticar otras rutas
-
- *     PerfilResponse:
- *       type: object
- *       properties:
- *         mensaje:
- *           type: string
- *           example: Perfil protegido
- *         usuario:
- *           type: object
- *           description: Datos del usuario extraídos del token
- */
-
-/**
- * @swagger
+ *
  * tags:
- *   name: Usuarios
- *   description: Endpoints para CRUD de usuarios
+ *   - name: Usuarios
+ *     description: Endpoints para CRUD de usuarios
  */
 
 /**
  * @swagger
  * /usuarios:
  *   get:
- *     summary: Obtener todos los usuarios (liebreros)
+ *     summary: Obtener todos los usuarios
+ *     description: |
+ *       Retorna todos los usuarios registrados en la base de datos.
+ *       - Si existen usuarios, devuelve **200** con un array de usuarios.
+ *       - Si no hay registros, devuelve **204**.
+ *       - Si ocurre un error en la consulta, devuelve **404**.
  *     tags: [Usuarios]
  *     responses:
  *       200:
  *         description: Lista de usuarios obtenida correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 usuario:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Usuario'
  *       204:
  *         description: No hay usuarios para mostrar
  *       404:
@@ -92,6 +83,12 @@ router.get('/', usuariosController.buscarTodo)
  * /usuarios/{key}/{value}:
  *   get:
  *     summary: Buscar un usuario por cualquier campo
+ *     description: |
+ *       Busca un usuario filtrando por un campo (`key`) y un valor (`value`) exactos.
+ *       - Realiza búsqueda exacta sin importar mayúsculas/minúsculas.
+ *       - Si encuentra el usuario, devuelve **200** con los datos.
+ *       - Si no encuentra resultados, devuelve **204**.
+ *       - Si ocurre un error, devuelve **404**.
  *     tags: [Usuarios]
  *     parameters:
  *       - in: path
@@ -109,6 +106,15 @@ router.get('/', usuariosController.buscarTodo)
  *     responses:
  *       200:
  *         description: Usuario encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 usuario:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Usuario'
  *       204:
  *         description: No se encontró el usuario
  *       404:
@@ -121,6 +127,11 @@ router.get('/:key/:value', usuariosController.buscarUsuario, usuariosController.
  * /usuarios/{key}/{value}:
  *   delete:
  *     summary: Eliminar un usuario por cualquier campo
+ *     description: |
+ *       Elimina un usuario que coincida con el campo (`key`) y el valor (`value`).
+ *       - Si el usuario existe, lo elimina y devuelve **200**.
+ *       - Si no existe, devuelve igualmente **200** pero no elimina nada.
+ *       - Si ocurre un error durante la eliminación, devuelve **404**.
  *     tags: [Usuarios]
  *     parameters:
  *       - in: path
@@ -148,6 +159,12 @@ router.delete('/:key/:value', usuariosController.buscarUsuario, usuariosControll
  * /usuarios/{key}/{value}:
  *   put:
  *     summary: Actualizar un usuario por cualquier campo
+ *     description: |
+ *       Actualiza un usuario que coincida con el campo (`key`) y el valor (`value`).
+ *       - Requiere que el usuario exista previamente (buscado con `buscarUsuario`).
+ *       - Si el usuario existe, actualiza los datos enviados en el cuerpo.
+ *       - Si no hay usuario que actualizar, devuelve **404**.
+ *       - Si ocurre un error, devuelve **404** con mensaje.
  *     tags: [Usuarios]
  *     parameters:
  *       - in: path
@@ -175,6 +192,5 @@ router.delete('/:key/:value', usuariosController.buscarUsuario, usuariosControll
  *         description: Error al actualizar usuario
  */
 router.put('/:key/:value', usuariosController.buscarUsuario, usuariosController.usuarioActualizar)
-
 
 module.exports = router;
