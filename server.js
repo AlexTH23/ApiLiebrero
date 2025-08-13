@@ -1,7 +1,10 @@
+// Importa express para usar sus middlewares
+const express = require('express');
+
 // Configuración
 const CONFIG = require('./app/config/configuracion');
 
-// App principal
+// App principal (instancia express ya creada dentro de ./app/app)
 const app = require('./app/app');
 
 // Swagger
@@ -17,10 +20,9 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 // Configuración CORS mejorada
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permite todas las origenes (en producción deberías restringirlo)
+    // Permite todas las orígenes (en producción deberías restringirlo)
     callback(null, true);
-
-    // Para producción, usa algo como:
+    // Para producción, usar algo como:
     // const allowedOrigins = ['https://tudominio.com', 'https://otrodominio.com'];
     // if (!origin || allowedOrigins.includes(origin)) {
     //   callback(null, true);
