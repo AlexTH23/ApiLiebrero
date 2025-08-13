@@ -2,23 +2,24 @@ const express = require('express');
 const app = express();
 require('dotenv').config();
 
-// Importar rutas
-const router = require('./routes/librosRoute');
-const usuarioRoutes = require('./routes/usuarioRoute');
-const authRoutes = require('./routes/authRoute'); // Ahora sí existe este archivoz
-
-const pdfRoutes = require('./routes/pdfRoute');
-
-// Middlewares para parsear datos
+// Middlewares
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Rutas
-app.use('/libros', router);
-app.use('/auth', authRoutes);      // Ruta /auth funcionando
-app.use('/usuarios', usuarioRoutes);
+// Importar rutas
+const librosRoute = require('./routes/librosRoute');
+const usuarioRoute = require('./routes/usuarioRoute');
+const authRoute = require('./routes/authRoute');
+const pdfRoute = require('./routes/pdfRoute');
 
-// ... después de tus rutas existentes
-app.use('/pdfs', pdfRoutes);
+// Rutas
+app.use('/libros', librosRoute);
+app.use('/auth', authRoute);
+app.use('/usuarios', usuarioRoute);
+app.use('/pdfs', pdfRoute);
+
+// Puerto dinámico para DigitalOcean
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
 
 module.exports = app;
