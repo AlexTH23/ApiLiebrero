@@ -78,6 +78,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Puerto — primero intenta process.env.PORT (DigitalOcean/App Platform)
 const PORT = process.env.PORT || CONFIG.PORT || 3000;
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0/0', () => {
   console.log(`Aplicación corriendo en puerto ${PORT}`);
 });
