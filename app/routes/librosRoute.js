@@ -192,7 +192,7 @@ router.post('/', librosController.crearLibro)
    *         description: Error al eliminar o libro no encontrado
    */
   
-  .delete('/:key/:value', librosController.buscarLibro, librosController.eliminarLibro);
+  .delete('/:key/:value', librosController.buscarLibro, librosController.eliminarLibro)
 
 /**
  * @swagger
@@ -205,6 +205,7 @@ router.post('/', librosController.crearLibro)
  *       200:
  *         description: Lista de libros
  */
+
 .get('/libros', async (req, res) => {
     try {
         const libros = await librosModel.find();
