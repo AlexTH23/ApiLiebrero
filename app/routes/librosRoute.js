@@ -59,11 +59,6 @@ const librosModel = require('../models/librosModel')
  * /libros:
  *   get:
  *     summary: Obtener todos los libros
- *     description: |
- *       Retorna la lista completa de libros almacenados en la base de datos.
- *       - Si existen libros, responde con **200** y el array de libros.
- *       - Si no hay registros, responde con **204**.
- *       - Si ocurre un error de consulta, responde con **404**.
  *     tags: [Libros]
  *     responses:
  *       200:
@@ -74,10 +69,6 @@ const librosModel = require('../models/librosModel')
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Libro'
- *       204:
- *         description: No se ha encontrado nada
- *       404:
- *         description: Error al consultar la información
  */
 router.get('/', librosController.obtenerLibros);
 
@@ -86,11 +77,6 @@ router.get('/', librosController.obtenerLibros);
  * /libros:
  *   post:
  *     summary: Crear un nuevo libro
- *     description: |
- *       Crea un nuevo libro a partir de los datos enviados en el cuerpo de la solicitud.
- *       - Los campos `titulo`, `autor`, `descripcion` y `genero` son obligatorios.
- *       - Si se guarda correctamente, responde con **200** y el mensaje de éxito junto con el libro creado.
- *       - Si ocurre un error de validación o guardado, responde con **404**.
  *     tags: [Libros]
  *     requestBody:
  *       required: true
@@ -101,9 +87,10 @@ router.get('/', librosController.obtenerLibros);
  *     responses:
  *       200:
  *         description: Libro creado exitosamente
- *       404:
+ *       400:
  *         description: Error al guardar el libro
  */
+
 router.post('/', librosController.crearLibro)
 
 /**
@@ -111,12 +98,6 @@ router.post('/', librosController.crearLibro)
  * /libros/{key}/{value}:
  *   get:
  *     summary: Buscar libros por cualquier campo
- *     description: |
- *       Busca libros por un campo específico (`key`) y su valor (`value`).
- *       - Realiza búsqueda exacta (no parcial) ignorando mayúsculas/minúsculas.
- *       - Si encuentra resultados, responde con **200**.
- *       - Si no encuentra nada, responde con **204**.
- *       - Si ocurre un error en la búsqueda, responde con **404**.
  *     tags: [Libros]
  *     parameters:
  *       - in: path
@@ -130,7 +111,7 @@ router.post('/', librosController.crearLibro)
  *         required: true
  *         schema:
  *           type: string
- *         description: Valor del campo a buscar
+ *         description: Valor del campo a buscar (por ejemplo, "Cien años de soledad")
  *     responses:
  *       200:
  *         description: Libros encontrados
@@ -144,81 +125,74 @@ router.post('/', librosController.crearLibro)
  *                   items:
  *                     $ref: '#/components/schemas/Libro'
  *       204:
- *         description: No se encontró ningún libro
+ *         description: No se encontró ningún libro con los datos proporcionados
  *       404:
  *         description: Error al buscar el libro
  */
-.get('/:key/:value', librosController.buscarLibro, librosController.mostrarLibro)
 
-/**
- * @swagger
- * /libros/{key}/{value}:
- *   put:
- *     summary: Actualizar un libro encontrado por un campo dinámico
- *     description: |
- *       Actualiza un libro buscado previamente por un campo dinámico (`key`) y valor (`value`).
- *       - Si el libro existe, actualiza los campos enviados en el body.
- *       - Si no existe, responde con **404**.
- *       - Si la actualización es exitosa, responde con **200** y la información de la operación.
- *     tags: [Libros]
- *     parameters:
- *       - in: path
- *         name: key
- *         required: true
- *         schema:
- *           type: string
- *         description: Campo por el cual buscar
- *       - in: path
- *         name: value
- *         required: true
- *         schema:
- *           type: string
- *         description: Valor del campo
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Libro'
- *     responses:
- *       200:
- *         description: Libro actualizado
- *       404:
- *         description: Error al actualizar o libro no encontrado
- */
-.put('/:key/:value', librosController.buscarLibro, librosController.actualizarLibro)
+ .get('/:key/:value', librosController.buscarLibro, librosController.mostrarLibro)
 
-/**
- * @swagger
- * /libros/{key}/{value}:
- *   delete:
- *     summary: Eliminar un libro encontrado por un campo dinámico
- *     description: |
- *       Elimina un libro que coincida con un campo (`key`) y su valor (`value`).
- *       - Si el libro existe, lo elimina y responde con **200**.
- *       - Si no existe, responde con **404**.
- *       - Si ocurre un error, responde con **404**.
- *     tags: [Libros]
- *     parameters:
- *       - in: path
- *         name: key
- *         required: true
- *         schema:
- *           type: string
- *         description: Campo por el cual buscar
- *       - in: path
- *         name: value
- *         required: true
- *         schema:
- *           type: string
- *         description: Valor del campo
- *     responses:
- *       200:
- *         description: Libro eliminado correctamente
- *       404:
- *         description: Error al eliminar o libro no encontrado
- */
-.delete('/:key/:value', librosController.buscarLibro, librosController.eliminarLibro)
+ /**
+  * @swagger
+  * /libros/{key}/{value}:
+  *   put:
+  *     summary: Actualizar un libro encontrado por un campo dinámico
+  *     tags: [Libros]
+  *     parameters:
+  *       - in: path
+  *         name: key
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: Campo por el cual buscar
+  *       - in: path
+  *         name: value
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: Valor del campo
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             $ref: '#/components/schemas/Libro'
+  *     responses:
+  *       200:
+  *         description: Libro actualizado
+  *       404:
+  *         description: Error al actualizar o libro no encontrado
+  */
+ 
+  .put('/:key/:value', librosController.buscarLibro, librosController.actualizarLibro)
+
+  /**
+   * @swagger
+   * /libros/{key}/{value}:
+   *   delete:
+   *     summary: Eliminar un libro encontrado por un campo dinámico
+   *     tags: [Libros]
+   *     parameters:
+   *       - in: path
+   *         name: key
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Campo por el cual buscar
+   *       - in: path
+   *         name: value
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Valor del campo
+   *     responses:
+   *       200:
+   *         description: Libro eliminado correctamente
+   *       404:
+   *         description: Error al eliminar o libro no encontrado
+   */
+  
+  .delete('/:key/:value', librosController.buscarLibro, librosController.eliminarLibro);
 
 /**
  * @swagger
